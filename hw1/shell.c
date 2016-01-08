@@ -29,6 +29,7 @@ pid_t shell_pgid;
 
 int cmd_quit(tok_t arg[]);
 int cmd_help(tok_t arg[]);
+int cmd_pwd(tok_t arg[]);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(tok_t args[]);
@@ -49,15 +50,16 @@ fun_desc_t cmd_table[] = {
  * Prints a helpful description for the given command
  */
 int cmd_pwd(tok_t arg[]) {
-	long size;
-	char *buf;
-	char *ptr;
-	size = pathconf(".", _PC_PATH_MAX);
-	if ((buf = (char *)malloc((size_t)size)) != NULL) {
-		ptr = getcwd(buf, (size_t)size);
+    long size;
+    char *buf;
+    char *ptr;
+    size = pathconf(".", _PC_PATH_MAX);
+    if ((buf = (char *)malloc((size_t)size)) != NULL) {
+	ptr = getcwd(buf, (size_t)size);
     }
     printf("%s\n",ptr);
     free(buf);
+    return 1;
 }
 /**
  * Prints a helpful description for the given command
