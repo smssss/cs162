@@ -123,6 +123,18 @@ void init_shell() {
   }
 }
 
+void run_prog(const tok_t *arg) {
+	int child_pid = fork();
+	if (child_pid == 0) {
+		// I'm the child.
+		exec(arg[0], &(args[1]));
+	} else {
+		// I'm the parent.
+		wait(child_pid);
+		return 0;
+	}	
+}
+
 int shell(int argc, char *argv[]) {
   char *input_bytes;
   tok_t *tokens;
@@ -142,7 +154,8 @@ int shell(int argc, char *argv[]) {
       cmd_table[fundex].fun(&tokens[1]);
     } else {
       /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
+      //fprintf(stdout, "This shell doesn't know how to run programs.\n");
+	  run_prog(tokens);
     }
 
     if (shell_is_interactive)
