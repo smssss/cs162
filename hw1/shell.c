@@ -45,7 +45,20 @@ fun_desc_t cmd_table[] = {
   {cmd_quit, "quit", "quit the command shell"},
   {cmd_pwd, "pwd", "print the current working directory"},
 };
-
+/**
+ * Prints a helpful description for the given command
+ */
+int cmd_pwd(tok_t arg[]) {
+	long size;
+	char *buf;
+	char *ptr;
+	size = pathconf(".", _PC_PATH_MAX);
+	if ((buf = (char *)malloc((size_t)size)) != NULL) {
+		ptr = getcwd(buf, (size_t)size);
+    }
+    printf("%s\n",ptr);
+    free(buf);
+}
 /**
  * Prints a helpful description for the given command
  */
