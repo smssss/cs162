@@ -45,20 +45,31 @@ fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_quit, "quit", "quit the command shell"},
   {cmd_pwd, "pwd", "print the current working directory"},
+	  {cmd_cd, "cd", "change the current working directory"},
 };
 /**
- * Prints a helpful description for the given command
+ * Changes the current working directory
+ */
+int cmd_cd(tok_t arg[]) {
+	if (chdir(arg[0]) == 0) {
+		printf("%s\n", arg[0]);
+		return 1;
+	} else {
+		printf("Change working directory aborts!\n");
+		return 0;
+	}
+}
+/**
+ * Prints the current working directory
  */
 int cmd_pwd(tok_t arg[]) {
-    long size;
     char *buf;
-    char *ptr;
-    size = pathconf(".", _PC_PATH_MAX);
+    long size = pathconf(".", _PC_PATH_MAX);
     if ((buf = (char *)malloc((size_t)size)) != NULL) {
-	ptr = getcwd(buf, (size_t)size);
-    }
-    printf("%s\n",ptr);
-    free(buf);
+		getcwd(buf, (size_t)size);
+        printf("%s\n", buf);
+		free(buf);
+    }   
     return 1;
 }
 /**
