@@ -127,13 +127,23 @@ void init_shell() {
 void run_prog(tok_t *arg) {
 	int child_pid = fork();
 	if (child_pid == 0) {
+		int i = -1;
+		while (arg[++i] != NULL) {
+			int file;
+			if (strcmp(arg[i],"<") && (file = open(arg[i+1],'r')) > 0){
+				dup2(file, 0);
+			}
+			if (strcmp(arg[i],">") && (file = open(arg[i+1],'w')) > 0){
+				dup2(file, 1);
+			}
+		}
 		if (execv(arg[0], arg) < 0) {
 			tok_t *path = get_toks(getenv("PATH"));
 			char *prog_name = arg[0];
-			int i = -1;
+			i = -1;
 			while (path[++i] != NULL) {
 				strcat(strcat(path[i],"/"), prog_name);
-                                arg[0] = path[i];
+                arg[0] = path[i];
 				execv(arg[0],arg);			
 			}		
 		}
@@ -141,7 +151,7 @@ void run_prog(tok_t *arg) {
 		int pid, status;
 		if ((pid = waitpid(child_pid, &status, 0)) < 0) {
 			printf("waitpid() error in run_prog()!\n");
-                } 
+        } 
 	}	
 }
 
