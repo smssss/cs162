@@ -31,7 +31,7 @@ int cmd_quit(tok_t arg[]);
 int cmd_help(tok_t arg[]);
 int cmd_pwd(tok_t arg[]);
 int cmd_cd(tok_t arg[]);
-void run_prog(const tok_t *arg);
+void run_prog(tok_t *arg);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(tok_t args[]);
@@ -124,17 +124,23 @@ void init_shell() {
   }
 }
 
-void run_prog(const tok_t *arg) {
+void run_prog(tok_t *arg) {
 	int child_pid = fork();
 	if (child_pid == 0) {
-		// I'm the child.
-		execv(arg[0], arg);
+		if (execv(arg[0], arg) < 0) {
+			tok_t *path = get_toks(getenv("PATH"));
+			char *prog_name = arg[0];
+			int i = -1;
+			while (path[++i] != NULL) {
+				strcat(strcat(path[i],"/"), prog_name);
+                                arg[0] = path[i];
+				execv(arg[0],arg);			
+			}		
+		}
 	} else {
-		// I'm the parent.
-		int status;
-                int pid;
+		int pid, status;
 		if ((pid = waitpid(child_pid, &status, 0)) < 0) {
-			printf("Error!\n");
+			printf("waitpid() error in run_prog()!\n");
                 } 
 	}	
 }
