@@ -130,10 +130,10 @@ void run_prog(tok_t *arg) {
 		int i = -1;
 		while (arg[++i] != NULL) {
 			int file;
-			if (strcmp(arg[i],"<") && (file = open(arg[i+1],'r')) > 0){
+			if (strcmp(arg[i],"<") && (file = open(arg[i+1],O_RDONLY)) > 0){
 				dup2(file, 0);
 			}
-			if (strcmp(arg[i],">") && (file = open(arg[i+1],'w')) > 0){
+			if (strcmp(arg[i],">") && (file = open(arg[i+1],O_WRONLY)) > 0){
 				dup2(file, 1);
 			}
 		}
