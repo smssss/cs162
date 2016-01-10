@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "io.h"
 #include "parse.h"
@@ -32,6 +34,7 @@ int cmd_help(tok_t arg[]);
 int cmd_pwd(tok_t arg[]);
 int cmd_cd(tok_t arg[]);
 void run_prog(tok_t *arg);
+tok_t *redirect(tok_t *arg);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(tok_t args[]);
@@ -124,26 +127,38 @@ void init_shell() {
   }
 }
 
+tok_t *redirect(tok_t *arg) {
+	int  i = 0;
+	bool is_arg = true;
+	int  fd;
+	while (arg[i] != NULL) {
+		if (!strcmp(arg[i],"<")) {
+			is_arg = false;
+			if ((fd = open(arg[i+1],O_RDONLY)) >= 0) 
+				dup2(fd, 0);
+		}
+		if (!strcmp(arg[i],">")) {
+			is_arg = false;
+			if ((fd = open(arg[i+1],O_WRONLY|O_TRUNC|O_CREAT,S_IRUSR|S_IRGRP|S_IWGRP|S_IWUSR )) >= 0) 			
+				dup2(fd, 1);
+		}
+		if (!is_arg) arg[i] = NULL;
+		i++;
+	}
+	return arg;
+}
 void run_prog(tok_t *arg) {
 	int child_pid = fork();
 	if (child_pid == 0) {
-		int i = -1;
-		while (arg[++i] != NULL) {
-			int file;
-			if (strcmp(arg[i],"<") && (file = open(arg[i+1],O_RDONLY)) > 0){
-				dup2(file, 0);
-			}
-			if (strcmp(arg[i],">") && (file = open(arg[i+1],O_WRONLY)) > 0){
-				dup2(file, 1);
-			}
-		}
+		arg = redirect(arg);
 		if (execv(arg[0], arg) < 0) {
 			tok_t *path = get_toks(getenv("PATH"));
 			char *prog_name = arg[0];
-			i = -1;
+			int i = -1;
 			while (path[++i] != NULL) {
-				strcat(strcat(path[i],"/"), prog_name);
-                arg[0] = path[i];
+				strcat(path[i],"/");
+				strcat(path[i], prog_name);
+				arg[0] = path[i];
 				execv(arg[0],arg);			
 			}		
 		}
